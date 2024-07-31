@@ -88,8 +88,8 @@ def orders():
             person_info["orders"] = []
         person_info["orders"].append({"item": order, "time": order_time})
 
-        # Reset the waiting time when an order is placed
-        person_info["time"] = time.time()
+        # Reset the order start time when an order is placed
+        person_info["order_start_time"] = time.time()
         person_info["last_update_time"] = time.time()
 
         print(f"Order received for Person {person_id}: {order} at {order_time}")
@@ -160,6 +160,15 @@ def get_waiting_times():
         if "orders" in person_info:
             elapsed_time = current_time - person_info["time"]
             waiting_time_str = time.strftime("%H:%M:%S", time.gmtime(elapsed_time))
+
+            # Calculate order waiting time based on the last update time
+            order_elapsed_time = current_time - person_info.get(
+                "order_start_time", current_time
+            )
+            order_waiting_time_str = time.strftime(
+                "%H:%M:%S", time.gmtime(order_elapsed_time)
+            )
+
             if elapsed_time > setTime:
                 waiting_time_str += " (EXCEEDED)"
                 if alarm_sound:
@@ -174,6 +183,7 @@ def get_waiting_times():
             )
             waiting_times[f"Person {person_info['id']}"] = {
                 "waiting_time": waiting_time_str,
+                "order_waiting_time": order_waiting_time_str,
                 "orders": orders_str,
             }
     return waiting_times
@@ -239,10 +249,16 @@ def detect_people():
             if "orders" in person_info:
                 elapsed_time = time.time() - person_info["time"]
                 waiting_time_str = time.strftime("%H:%M:%S", time.gmtime(elapsed_time))
+                order_elapsed_time = time.time() - person_info.get(
+                    "order_start_time", time.time()
+                )
+                order_waiting_time_str = time.strftime(
+                    "%H:%M:%S", time.gmtime(order_elapsed_time)
+                )
                 x, y, w, h = person_info["bbox"]
                 cv2.putText(
                     frame,
-                    f'Person {person_info["id"]} - Waiting Time: {waiting_time_str}',
+                    f'Person {person_info["id"]} - Waiting Time: {waiting_time_str} - Order Waiting Time: {order_waiting_time_str}',
                     (x, y - 10),
                     cv2.FONT_HERSHEY_SIMPLEX,
                     0.5,
