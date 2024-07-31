@@ -70,17 +70,18 @@ def orders():
     data = request.json
     person_id = int(data.get("person_id"))
     order = data.get("order")
+    order_time = time.strftime('%Y-%m-%d %H:%M:%S', time.localtime())
     if person_id in detected_people:
         person_info = detected_people[person_id]
         if "orders" not in person_info:
             person_info["orders"] = []
-        person_info["orders"].append(order)
+        person_info["orders"].append({"item": order, "time": order_time})
         
         # Reset the waiting time when an order is placed
         person_info["time"] = time.time()
         person_info["last_update_time"] = time.time()
         
-        print(f"Order received for Person {person_id}: {order}")
+        print(f"Order received for Person {person_id}: {order} at {order_time}")
     else:
         print(f"Person {person_id} not found.")
     return jsonify({"message": "Order placed successfully", "person_id": person_id, "order": order})
@@ -141,7 +142,7 @@ def get_waiting_times():
                     if not person_info["alarm_triggered"]:
                         alarm_sound.play()
                         person_info["alarm_triggered"] = True
-            orders_str = ', '.join(person_info.get("orders", []))
+            orders_str = ', '.join([f"{order['item']} ({order['time']})" for order in person_info.get("orders", [])])
             waiting_times[f"Person {person_info['id']}"] = {
                 "waiting_time": waiting_time_str,
                 "orders": orders_str
@@ -212,4 +213,3 @@ def detect_people():
 
 if __name__ == "__main__":
     socketio.run(app, debug=True)
-
