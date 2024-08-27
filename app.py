@@ -102,7 +102,7 @@ def orders():
 
 # YOLOv8 model loading
 model = YOLO("yolov8l.pt")
-video_path = "m1.mp4"
+video_path = "mmttest3.mp4"
 cap = cv2.VideoCapture(video_path)
 
 # Data structures
