@@ -17,7 +17,6 @@ socketio = SocketIO(app)
 USERNAME = "admin"
 PASSWORD = "password"
 
-
 # Routes
 @app.route("/")
 def home():
@@ -81,7 +80,7 @@ def orders():
     data = request.json
     person_id = int(data.get("person_id"))
     order = data.get("order")
-    order_time = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime())
+    order_time = time.strftime("%H:%M:%S", time.localtime())  # Changed to show only time
     if person_id in detected_people:
         person_info = detected_people[person_id]
         if "orders" not in person_info:
@@ -159,15 +158,11 @@ def get_waiting_times():
     for person_info in detected_people.values():
         if "orders" in person_info:
             elapsed_time = current_time - person_info["time"]
-            waiting_time_str = time.strftime("%H:%M:%S", time.gmtime(elapsed_time))
+            order_elapsed_time = current_time - person_info.get("order_start_time", current_time)
 
-            # Calculate order waiting time based on the last update time
-            order_elapsed_time = current_time - person_info.get(
-                "order_start_time", current_time
-            )
-            order_waiting_time_str = time.strftime(
-                "%H:%M:%S", time.gmtime(order_elapsed_time)
-            )
+            # Format time as minutes:seconds
+            waiting_time_str = time.strftime("%M:%S", time.gmtime(elapsed_time))
+            order_waiting_time_str = time.strftime("%M:%S", time.gmtime(order_elapsed_time))
 
             if elapsed_time > setTime:
                 waiting_time_str += " (EXCEEDED)"
@@ -176,10 +171,7 @@ def get_waiting_times():
                         alarm_sound.play()
                         person_info["alarm_triggered"] = True
             orders_str = ", ".join(
-                [
-                    f"{order['item']} ({order['time']})"
-                    for order in person_info.get("orders", [])
-                ]
+                [f"{order['item']} ({order['time']})" for order in person_info.get("orders", [])]
             )
             waiting_times[f"Person {person_info['id']}"] = {
                 "waiting_time": waiting_time_str,
@@ -248,12 +240,12 @@ def detect_people():
         for person_info in detected_people.values():
             if "orders" in person_info:
                 elapsed_time = time.time() - person_info["time"]
-                waiting_time_str = time.strftime("%H:%M:%S", time.gmtime(elapsed_time))
+                waiting_time_str = time.strftime("%M:%S", time.gmtime(elapsed_time))
                 order_elapsed_time = time.time() - person_info.get(
                     "order_start_time", time.time()
                 )
                 order_waiting_time_str = time.strftime(
-                    "%H:%M:%S", time.gmtime(order_elapsed_time)
+                    "%M:%S", time.gmtime(order_elapsed_time)
                 )
                 x, y, w, h = person_info["bbox"]
                 cv2.putText(

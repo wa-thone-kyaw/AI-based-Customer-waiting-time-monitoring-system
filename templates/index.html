@@ -79,10 +79,18 @@
               >
                 <thead>
                   <tr class="bg-gray-200">
-                    <th class="px-4 py-2 border-b">Person</th>
-                    <th class="px-4 py-2 border-b">Waiting Time</th>
-                    <th class="px-4 py-2 border-b">Order Waiting Time</th>
-                    <th class="px-4 py-2 border-b">Orders</th>
+                    <th class="px-4 py-2 text-left font-medium text-gray-700">
+                      Person
+                    </th>
+                    <th class="px-4 py-2 text-left font-medium text-gray-700">
+                      Waiting Time
+                    </th>
+                    <th class="px-4 py-2 text-left font-medium text-gray-700">
+                      Order Waiting Time
+                    </th>
+                    <th class="px-4 py-2 text-left font-medium text-gray-700">
+                      Orders
+                    </th>
                   </tr>
                 </thead>
                 <tbody id="waitingTimesBody">
@@ -126,12 +134,10 @@
         waitingTimesBody.innerHTML = ""; // Clear existing rows
         Object.entries(waitingTimes).forEach(([person, info]) => {
           const row = document.createElement("tr");
-          row.innerHTML = `
-            <td class="px-4 py-2 border-b">${person}</td>
+          row.innerHTML = `<td class="px-4 py-2 border-b">${person}</td>
             <td class="px-4 py-2 border-b">${info.waiting_time}</td>
             <td class="px-4 py-2 border-b">${info.order_waiting_time}</td>
-            <td class="px-4 py-2 border-b">${info.orders}</td>
-          `;
+            <td class="px-4 py-2 border-b">${info.orders}</td>`;
           waitingTimesBody.appendChild(row);
         });
 
