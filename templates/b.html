@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Customer Waiting Time Monitoring</title>
+    <link
+      href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css"
+      rel="stylesheet"
+    />
+  </head>
+  <body class="bg-gray-100">
+    <div class="container mx-auto mt-5">
+      <h1 class="text-center mb-4 text-3xl font-bold">
+        AI-based Customer Waiting Time Monitoring System
+      </h1>
+      <div class="flex justify-between mb-4">
+        <a href="/settings" class="text-blue-500 hover:underline">Settings</a>
+      </div>
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Video Feed Card -->
+        <div class="card rounded-lg shadow-md bg-white">
+          <div class="card-body p-4">
+            <img
+              id="videoElement"
+              src="{{ url_for('video_feed') }}"
+              class="w-full h-auto"
+              alt="Video Feed"
+            />
+          </div>
+        </div>
+        <!-- Order Form -->
+        <form id="orderForm" class="bg-white p-4 shadow-md rounded-lg">
+          <div class="mb-4">
+            <label
+              for="personSelect"
+              class="block text-gray-700 text-sm font-medium"
+            >
+              Select Person:
+            </label>
+            <select
+              id="personSelect"
+              class="mt-1 block w-full p-2 border border-gray-300 rounded-md"
+            >
+              <!-- Options will be populated here -->
+            </select>
+          </div>
+          <div class="mb-4">
+            <label
+              for="itemSelect"
+              class="block text-gray-700 text-sm font-medium"
+            >
+              Select Item:
+            </label>
+            <select
+              id="itemSelect"
+              class="mt-1 block w-full p-2 border border-gray-300 rounded-md"
+            >
+              <!-- Options will be populated here -->
+            </select>
+          </div>
+          <button
+            type="submit"
+            class="bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600"
+          >
+            Place Order
+          </button>
+        </form>
+      </div>
+      <div class="mt-5">
+        <!-- Waiting Times Table Card -->
+        <div class="card rounded-lg shadow-md bg-white">
+          <div class="card-body p-4">
+            <div class="overflow-x-auto">
+              <table
+                id="waitingTimesTable"
+                class="min-w-full bg-white border border-gray-300 rounded-lg shadow-md"
+              >
+                <thead>
+                  <tr class="bg-gray-200">
+                    <th class="px-4 py-2 text-left font-medium text-gray-700">
+                      Person
+                    </th>
+                    <th class="px-4 py-2 text-left font-medium text-gray-700">
+                      Waiting Time
+                    </th>
+                    <th class="px-4 py-2 text-left font-medium text-gray-700">
+                      Order Waiting Time
+                    </th>
+                    <th class="px-4 py-2 text-left font-medium text-gray-700">
+                      Orders
+                    </th>
+                  </tr>
+                </thead>
+                <tbody id="waitingTimesBody">
+                  <!-- Waiting times will be injected here -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="mt-5">
+        <!-- Settings Control -->
+        <div class="card rounded-lg shadow-md bg-white">
+          <div class="card-body p-4">
+            <h2 class="text-xl font-bold mb-4">Settings</h2>
+            <form id="settingsForm">
+              <div class="mb-4">
+                <label
+                  for="setTime"
+                  class="block text-gray-700 text-sm font-medium"
+                >
+                  Set Alarm Time (seconds):
+                </label>
+                <input
+                  type="number"
+                  id="setTime"
+                  name="setTime"
+                  class="mt-1 block w-full p-2 border border-gray-300 rounded-md"
+                  value="{{ setTime }}"
+                />
+              </div>
+              <button
+                type="submit"
+                class="bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600"
+              >
+                Save Settings
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs"></script>
+    <script src="https://cdn.jsdelivr.net/npm/socket.io-client/dist/socket.io.min.js"></script>
+    <script>
+      const socket = io();
+
+      // Fetch items and populate select options
+      fetch("/items")
+        .then((response) => response.json())
+        .then((data) => {
+          const itemSelect = document.getElementById("itemSelect");
+          const items = data;
+          items.cakes.forEach((item) => {
+            const option = document.createElement("option");
+            option.value = item;
+            option.textContent = item;
+            itemSelect.appendChild(option);
+          });
+          items.coffee.forEach((item) => {
+            const option = document.createElement("option");
+            option.value = item;
+            option.textContent = item;
+            itemSelect.appendChild(option);
+          });
+        });
+
+      // Update waiting times table
+      socket.on("update_waiting_times", (waitingTimes) => {
+        const waitingTimesBody = document.getElementById("waitingTimesBody");
+        waitingTimesBody.innerHTML = ""; // Clear existing rows
+        Object.entries(waitingTimes).forEach(([person, info]) => {
+          const orders = info.orders
+            .split(", ")
+            .map((order) => {
+              const [item, time] = order.split(" (");
+              return `<img src="/static/images/${item.replace(
+                / /g,
+                "_"
+              )}.jpg" alt="${item}" class="inline-block w-6 h-6 mr-2" />${item} (${time}`;
+            })
+            .join(", ");
+
+          const row = document.createElement("tr");
+          row.innerHTML = `<td class="px-4 py-2 border-b">${person}</td>
+            <td class="px-4 py-2 border-b">${info.waiting_time}</td>
+            <td class="px-4 py-2 border-b">${info.order_waiting_time}</td>
+            <td class="px-4 py-2 border-b">${orders}</td>`;
+          waitingTimesBody.appendChild(row);
+        });
+
+        // Save current selection
+        const personSelect = document.getElementById("personSelect");
+        const currentSelection = personSelect.value;
+
+        // Populate personSelect options
+        personSelect.innerHTML = ""; // Clear existing options
+        Object.keys(waitingTimes).forEach((person) => {
+          const option = document.createElement("option");
+          option.value = person.split(" ")[1]; // Assuming format is "Person ID"
+          option.textContent = person;
+          personSelect.appendChild(option);
+        });
+
+        // Restore selection if still present
+        if (currentSelection) {
+          personSelect.value = currentSelection;
+        }
+      });
+
+      // Handle order form submission
+      const orderForm = document.getElementById("orderForm");
+      orderForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+        const person = document.getElementById("personSelect").value;
+        const item = document.getElementById("itemSelect").value;
+        fetch("/orders", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            person_id: parseInt(person),
+            order: item,
+          }),
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            console.log(data.message);
+            socket.emit("update_waiting_times"); // Request an update to refresh the table
+          });
+      });
+
+      // Handle settings form submission
+      const settingsForm = document.getElementById("settingsForm");
+      settingsForm.addEventListener("submit", (event) => {
+        event.preventDefault();
+        const setTime = document.getElementById("setTime").value;
+        fetch("/settings", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ setTime: parseFloat(setTime) }),
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            console.log("Settings updated:", data);
+            alert("Settings have been saved!");
+          });
+      });
+
+      // Initial population of personSelect options
+      socket.emit("update_waiting_times");
+    </script>
+  </body>
+</html>

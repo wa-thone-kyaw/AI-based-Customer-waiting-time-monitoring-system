@@ -12,21 +12,19 @@
   </head>
   <body class="bg-gray-100">
     <div class="container mx-auto mt-5">
-  <div class="flex justify-between items-center mb-4">
-    <h1 class="flex-grow text-3xl font-bold text-center">
-      AI-based Customer Waiting Time Monitoring System
-    </h1>
-    <!-- Logout Button -->
-    <button
-      id="logoutBtn"
-      class="bg-red-500 text-white py-2 px-4 rounded-md hover:bg-red-600"
-      onclick="logout()"
-    >
-      Logout
-    </button>
-  </div>
-</div>
-
+      <div class="flex justify-between items-center mb-4">
+        <h1 class="text-3xl font-bold">
+          AI-based Customer Waiting Time Monitoring System
+        </h1>
+        <!-- Logout Button -->
+        <button
+          id="logoutBtn"
+          class="bg-red-500 text-white py-2 px-4 rounded-md hover:bg-red-600"
+          onclick="logout()"
+        >
+          Logout
+        </button>
+      </div>
 
       <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
         <!-- Video Feed Card -->
@@ -93,7 +91,7 @@
                       Person
                     </th>
                     <th class="px-4 py-2 text-left font-medium text-gray-700">
-                      Sitting Time
+                      Waiting Time
                     </th>
                     <th class="px-4 py-2 text-left font-medium text-gray-700">
                       Order Waiting Time
@@ -116,21 +114,21 @@
       </div>
     </div>
     <!-- Separate buttons for Waiting Time and Order Waiting Time -->
-   <div class="flex mb-4">
-  <button
-    id="openSettingsWaitingBtn"
-    class="bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600 mr-4"  <!-- Added margin-right -->
-  >
-    Sitting Time Settings
-  </button>
-  <button
-    id="openSettingsOrderBtn"
-    class="bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600"
-  >
-    Order Waiting Time Settings
-  </button>
-</div>
-
+    <div class="flex justify-flex mb-4">
+      <button
+        id="openSettingsWaitingBtn"
+        class="bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600"
+      >
+        Waiting Time Settings
+      </button>
+      <div></div>
+      <button
+        id="openSettingsOrderBtn"
+        class="bg-blue-500 text-white py-2 px-4 rounded-md hover:bg-blue-600"
+      >
+        Order Waiting Time Settings
+      </button>
+    </div>
 
     <!-- Settings Modal -->
     <!-- Settings Modal -->
@@ -145,8 +143,9 @@
           <div class="mb-4">
             <label
               for="setTime"
-              class="block text-gray-700 text-sm font-medium">
-              Set Sitting Time:
+              class="block text-gray-700 text-sm font-medium"
+            >
+              Set Waiting Time (seconds):
             </label>
             <input
               type="number"
@@ -160,7 +159,7 @@
               for="setOrderTime"
               class="block text-gray-700 text-sm font-medium"
             >
-              Set Order Waiting Time:
+              Set Order Waiting Time (seconds):
             </label>
             <input
               type="number"
@@ -242,13 +241,7 @@
         const setTime = document.getElementById("setTime").value;
         const setOrderTime = document.getElementById("setOrderTime").value;
 
-        const dataToSend = {};
-        if (setTime) {
-          dataToSend.setTime = setTime; // Add setTime if it has a value
-        }
-        if (setOrderTime) {
-          dataToSend.setOrderTime = setOrderTime; // Add setOrderTime if it has a value
-        } // Send only the relevant data
+        const dataToSend = setTime ? { setTime } : { setOrderTime }; // Send only the relevant data
 
         fetch("/settings", {
           method: "POST",
